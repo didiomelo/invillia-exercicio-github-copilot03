@@ -4,16 +4,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
-  // Function to fetch activities from API
+  // Componente para exibir participantes
+  function ParticipantsList(participants) {
+    if (!participants || participants.length === 0) {
+      return `<div class="participants-list empty">Nenhum participante ainda.</div>`;
+    }
+    return `
+      <div class="participants-list">
+        <strong>Inscritos:</strong>
+        <ul>
+          ${participants.map(email => `<li>${email}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Função para buscar atividades da API
   async function fetchActivities() {
     try {
       const response = await fetch("/activities");
       const activities = await response.json();
 
-      // Clear loading message
+      // Limpa mensagem de carregamento
       activitiesList.innerHTML = "";
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
-      // Populate activities list
+      // Popula lista de atividades
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
@@ -25,11 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${ParticipantsList(details.participants)}
         `;
 
         activitiesList.appendChild(activityCard);
 
-        // Add option to select dropdown
+        // Adiciona opção ao select
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
@@ -41,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Handle form submission
+  // Lida com envio do formulário
   signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -62,6 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Atualiza a lista de atividades para mostrar o novo participante
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
@@ -69,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       messageDiv.classList.remove("hidden");
 
-      // Hide message after 5 seconds
+      // Esconde mensagem após 5 segundos
       setTimeout(() => {
         messageDiv.classList.add("hidden");
       }, 5000);
@@ -81,6 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initialize app
+  // Inicializa app
   fetchActivities();
 });
